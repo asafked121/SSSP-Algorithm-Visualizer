@@ -1,0 +1,3 @@
+# Python dependencies for SSSP Algorithm Visualizer
+flask>=2.0.0
+

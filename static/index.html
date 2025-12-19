@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSSP Algorithm Visualizer</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-panel: #12121a;
+            --bg-card: #1a1a24;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #2a2a3a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-card) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        button {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button.active {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        select {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        select:hover {
+            border-color: var(--accent-purple);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        input[type="range"] {
+            width: 100px;
+            accent-color: var(--accent-purple);
+        }
+
+        /* Main container */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: var(--border);
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* Algorithm panels */
+        .algo-panel {
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .algo-header {
+            background: var(--bg-panel);
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .algo-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .algo-panel:first-child .algo-title {
+            color: var(--accent-blue);
+        }
+
+        .algo-panel:last-child .algo-title {
+            color: var(--accent-purple);
+        }
+
+        .step-counter {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .cost-display {
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cost-display.dijkstra {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .cost-display.sorting-barrier {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .cost-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+
+        /* Cost comparison bar */
+        .cost-comparison {
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .comparison-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .comparison-bars {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .bar-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .bar-label {
+            font-size: 0.75rem;
+            width: 100px;
+            text-align: right;
+        }
+
+        .bar-label.dijkstra {
+            color: var(--accent-blue);
+        }
+
+        .bar-label.sb {
+            color: var(--accent-purple);
+        }
+
+        .bar-track {
+            flex: 1;
+            height: 20px;
+            background: var(--bg-card);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+        }
+
+        .bar-fill.dijkstra {
+            background: linear-gradient(90deg, var(--accent-blue), #ef4444);
+        }
+
+        .bar-fill.sb {
+            background: linear-gradient(90deg, var(--accent-purple), #22c55e);
+        }
+
+        .bar-value {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .speedup-badge {
+            background: linear-gradient(135deg, #22c55e, #10b981);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            font-size: 1rem;
+            text-align: center;
+            min-width: 120px;
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+        }
+
+        .speedup-badge.neutral {
+            background: var(--bg-card);
+            color: var(--text-muted);
+            box-shadow: none;
+        }
+
+        /* Race mode toggle */
+        .race-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 0.4rem 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .race-toggle:hover {
+            border-color: var(--accent-orange);
+        }
+
+        .race-toggle.active {
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            border-color: #f59e0b;
+            color: white;
+        }
+
+        .race-toggle .toggle-icon {
+            font-size: 1.1rem;
+        }
+
+        .race-toggle .toggle-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+
+        /* Graph canvas */
+        .graph-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+            /* Important for flexbox */
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Status bar */
+        .status-bar {
+            background: var(--bg-panel);
+            padding: 0.5rem 1rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            max-height: 60px;
+            overflow: hidden;
+        }
+
+        .status-bar.compact {
+            max-height: 32px;
+            padding: 0.4rem 1rem;
+        }
+
+        .status-message {
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .status-distances {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            word-break: break-all;
+            max-height: 24px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-bar.compact .status-distances {
+            display: none;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.unvisited {
+            background: var(--text-muted);
+        }
+
+        .legend-dot.frontier {
+            background: var(--accent-orange);
+        }
+
+        .legend-dot.current {
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .legend-dot.visited {
+            background: var(--accent-blue);
+        }
+
+        /* Loading state */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 0.5rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div>
+            <h1>⚡ SSSP Algorithm Visualizer</h1>
+            <div class="subtitle">Comparing Dijkstra vs Sorting Barrier</div>
+        </div>
+        <div class="controls">
+            <button id="btn-reset" title="Reset">↺ Reset</button>
+            <button id="btn-back" title="Step Back">⏮ Back</button>
+            <button id="btn-step" title="Step Forward">⏭ Step</button>
+            <button id="btn-play" title="Play/Pause">▶ Play</button>
+            <div class="race-toggle" id="race-toggle" title="Race Mode: algorithms advance based on theoretical cost">
+                <span class="toggle-icon">🏁</span>
+                <span class="toggle-label">Race Mode</span>
+            </div>
+            <div class="speed-control">
+                <span>Speed:</span>
+                <input type="range" id="speed" min="0" max="100" value="35">
+                <span id="speed-label">5x</span>
+            </div>
+            <button id="btn-new-graph" title="New Random Graph">🎲 New Graph</button>
+            <select id="maze-size" title="Maze Size">
+                <option value="small">Small (5×6)</option>
+                <option value="medium" selected>Medium (8×10)</option>
+                <option value="large">Large (12×16)</option>
+                <option value="huge">Huge (20×25)</option>
+                <option value="massive">Massive (30×40)</option>
+            </select>
+            <button id="btn-maze" title="Generate Maze">🧩 Maze</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Dijkstra Panel -->
+        <div class="algo-panel" id="dijkstra-panel">
+            <div class="algo-header">
+                <span class="algo-title">Dijkstra's Algorithm</span>
+                <div class="cost-display dijkstra">
+                    <span>Sorting Cost:</span>
+                    <span class="cost-value" id="dijkstra-cost">0</span>
+                </div>
+                <span class="step-counter" id="dijkstra-step">Step: 0/0</span>
+            </div>
+            <div class="graph-container">
+                <canvas id="dijkstra-canvas"></canvas>
+            </div>
+            <div class="status-bar">
+                <div class="status-message" id="dijkstra-message">Loading...</div>
+                <div class="status-distances" id="dijkstra-distances"></div>
+            </div>
+        </div>
+
+        <!-- Sorting Barrier Panel -->
+        <div class="algo-panel" id="sorting-barrier-panel">
+            <div class="algo-header">
+                <span class="algo-title">Sorting Barrier SSSP</span>
+                <div class="cost-display sorting-barrier">
+                    <span>Sorting Cost:</span>
+                    <span class="cost-value" id="sb-cost">0</span>
+                </div>
+                <span class="step-counter" id="sb-step">Step: 0/0</span>
+            </div>
+            <div class="graph-container">
+                <canvas id="sb-canvas"></canvas>
+            </div>
+            <div class="status-bar">
+                <div class="status-message" id="sb-message">Loading...</div>
+                <div class="status-distances" id="sb-distances"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cost Comparison Section -->
+    <div class="cost-comparison">
+        <div class="comparison-label">
+            <div><strong>Sorting Cost</strong></div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">Theoretical work</div>
+        </div>
+        <div class="comparison-bars">
+            <div class="bar-container">
+                <span class="bar-label dijkstra">Dijkstra</span>
+                <div class="bar-track">
+                    <div class="bar-fill dijkstra" id="dijkstra-bar" style="width: 0%">
+                        <span class="bar-value" id="dijkstra-bar-value">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bar-container">
+                <span class="bar-label sb">Sorting Barrier</span>
+                <div class="bar-track">
+                    <div class="bar-fill sb" id="sb-bar" style="width: 0%">
+                        <span class="bar-value" id="sb-bar-value">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="speedup-badge neutral" id="speedup-badge">
+            <div style="font-size: 0.7rem;">SPEEDUP</div>
+            <div id="speedup-value">—</div>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-dot unvisited"></div> Unvisited
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot frontier"></div> Frontier
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot current"></div> Current
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot visited"></div> Visited
+        </div>
+    </div>
+
+    <script>
+        // Visualization state
+        let data = null;
+        let dijkstraStep = 0;
+        let sbStep = 0;
+        let isPlaying = false;
+        let playInterval = null;
+        let nodePositions = {};
+        let isMazeMode = false;
+        let mazeGrid = null;
+        let shortestPath = [];
+        let raceMode = false;  // When true, algorithms advance based on cost
+        let dijkstraFinished = false;
+        let sbFinished = false;
+        let dijkstraWorkDone = 0;  // Accumulated work for Dijkstra
+        let sbWorkDone = 0;        // Accumulated work for Sorting Barrier
+
+        // Colors
+        const COLORS = {
+            unvisited: '#64748b',
+            frontier: '#f59e0b',
+            current: '#10b981',
+            visited: '#3b82f6',
+            edge: '#2a2a3a',
+            edgeActive: '#8b5cf6',
+            text: '#f1f5f9',
+            textMuted: '#94a3b8',
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('btn-reset').addEventListener('click', reset);
+            document.getElementById('btn-back').addEventListener('click', stepBack);
+            document.getElementById('btn-step').addEventListener('click', stepForward);
+            document.getElementById('btn-play').addEventListener('click', togglePlay);
+            document.getElementById('btn-new-graph').addEventListener('click', newGraph);
+            document.getElementById('btn-maze').addEventListener('click', generateMaze);
+            document.getElementById('race-toggle').addEventListener('click', toggleRaceMode);
+
+            document.getElementById('speed').addEventListener('input', (e) => {
+                const val = parseInt(e.target.value);
+                // Logarithmic scale: 0->1x, 50->12x, 100->150x
+                // Formula: 150^(val/100)
+                const speed = Math.round(Math.pow(150, val / 100));
+                document.getElementById('speed-label').textContent = speed + 'x';
+
+                if (isPlaying) {
+                    clearInterval(playInterval);
+                    startPlayback();
+                }
+            });
+        }
+
+        function toggleRaceMode() {
+            raceMode = !raceMode;
+            const toggle = document.getElementById('race-toggle');
+            toggle.classList.toggle('active', raceMode);
+
+            // Update button appearance
+            if (raceMode) {
+                toggle.querySelector('.toggle-label').textContent = 'Race ON';
+            } else {
+                toggle.querySelector('.toggle-label').textContent = 'Race Mode';
+            }
+
+            // If playing, restart playback with new mode
+            if (isPlaying) {
+                clearInterval(playInterval);
+                startPlayback();
+            }
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/visualization');
+                data = await response.json();
+                calculateNodePositions();
+                reset();
+            } catch (error) {
+                console.error('Failed to fetch data:', error);
+                document.getElementById('dijkstra-message').textContent = 'Error loading data';
+                document.getElementById('sb-message').textContent = 'Error loading data';
+            }
+        }
+
+        async function newGraph() {
+            try {
+                isMazeMode = false;
+                mazeGrid = null;
+                shortestPath = [];
+                const response = await fetch('/api/new-graph', { method: 'POST' });
+                data = await response.json();
+                calculateNodePositions();
+                reset();
+            } catch (error) {
+                console.error('Failed to generate new graph:', error);
+            }
+        }
+
+        async function generateMaze() {
+            try {
+                const size = document.getElementById('maze-size').value;
+                const response = await fetch('/api/maze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ size: size })
+                });
+                const result = await response.json();
+                data = result;
+                mazeGrid = result.maze;
+                isMazeMode = true;
+                shortestPath = result.shortest_path || [];
+                calculateMazePositions();
+                reset();
+            } catch (error) {
+                console.error('Failed to generate maze:', error);
+            }
+        }
+
+        function calculateMazePositions() {
+            if (!data || !mazeGrid) return;
+
+            nodePositions = {};
+            const rows = mazeGrid.rows;
+            const cols = mazeGrid.cols;
+
+            data.graph.nodes.forEach(node => {
+                const row = Math.floor(node / cols);
+                const col = node % cols;
+                nodePositions[node] = {
+                    x: 0.1 + (col / (cols - 1)) * 0.8,
+                    y: 0.1 + (row / (rows - 1)) * 0.8
+                };
+            });
+        }
+
+        function calculateNodePositions() {
+            if (!data) return;
+
+            const nodes = data.graph.nodes;
+            const n = nodes.length;
+            const padding = 60;
+
+            // Use force-directed layout approximation
+            nodePositions = {};
+
+            // Start with circular layout
+            nodes.forEach((node, i) => {
+                const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+                const radius = Math.min(200, 150 + n * 5);
+                nodePositions[node] = {
+                    x: 0.5 + 0.35 * Math.cos(angle),
+                    y: 0.5 + 0.35 * Math.sin(angle)
+                };
+            });
+
+            // Simple force simulation
+            for (let iter = 0; iter < 50; iter++) {
+                const forces = {};
+                nodes.forEach(n => forces[n] = { x: 0, y: 0 });
+
+                // Repulsion between all nodes
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const a = nodes[i], b = nodes[j];
+                        const dx = nodePositions[b].x - nodePositions[a].x;
+                        const dy = nodePositions[b].y - nodePositions[a].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy) + 0.01;
+                        const force = 0.01 / (dist * dist);
+                        forces[a].x -= (dx / dist) * force;
+                        forces[a].y -= (dy / dist) * force;
+                        forces[b].x += (dx / dist) * force;
+                        forces[b].y += (dy / dist) * force;
+                    }
+                }
+
+                // Attraction along edges
+                data.graph.edges.forEach(edge => {
+                    const a = edge.source, b = edge.target;
+                    const dx = nodePositions[b].x - nodePositions[a].x;
+                    const dy = nodePositions[b].y - nodePositions[a].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy) + 0.01;
+                    const force = dist * 0.1;
+                    forces[a].x += (dx / dist) * force;
+                    forces[a].y += (dy / dist) * force;
+                    forces[b].x -= (dx / dist) * force;
+                    forces[b].y -= (dy / dist) * force;
+                });
+
+                // Apply forces
+                nodes.forEach(n => {
+                    nodePositions[n].x = Math.max(0.1, Math.min(0.9, nodePositions[n].x + forces[n].x * 0.1));
+                    nodePositions[n].y = Math.max(0.1, Math.min(0.9, nodePositions[n].y + forces[n].y * 0.1));
+                });
+            }
+        }
+
+        function reset() {
+            dijkstraStep = 0;
+            sbStep = 0;
+            dijkstraFinished = false;
+            sbFinished = false;
+            dijkstraWorkDone = 0;
+            sbWorkDone = 0;
+            stopPlayback();
+            render();
+        }
+
+        function stepBack() {
+            if (!data) return;
+
+            if (dijkstraStep > 0) dijkstraStep--;
+            if (sbStep > 0) sbStep--;
+
+            render();
+        }
+
+        function stepForward() {
+            if (!data) return;
+
+            const maxDijkstra = data.dijkstra.steps.length - 1;
+            const maxSb = data.sorting_barrier.steps.length - 1;
+
+            if (dijkstraStep < maxDijkstra) dijkstraStep++;
+            if (sbStep < maxSb) sbStep++;
+
+            render();
+
+            if (dijkstraStep >= maxDijkstra && sbStep >= maxSb) {
+                stopPlayback();
+            }
+        }
+
+        function raceStep() {
+            // TRUE race mode: algorithms advance based on actual theoretical cost
+            // Shows the real speedup ratio between algorithms
+            if (!data) return;
+
+            const maxDijkstra = data.dijkstra.steps.length - 1;
+            const maxSb = data.sorting_barrier.steps.length - 1;
+
+            if (dijkstraStep >= maxDijkstra && sbStep >= maxSb) {
+                stopPlayback();
+                return;
+            }
+
+            // Get final total work for each algorithm
+            const dijFinalWork = data.dijkstra.steps[maxDijkstra]?.total_work || 1;
+            const sbFinalWork = data.sorting_barrier.steps[maxSb]?.total_work || 1;
+
+            // TRUE speedup ratio: how many times faster SB is
+            const speedupRatio = dijFinalWork / sbFinalWork;
+
+            // Normalize progress: The FASTEST algorithm moves 1 step per tick.
+            // The slower one moves (1 / ratio) steps per tick.
+            // This ensures we render every single step of the fast algorithm.
+            let dijSpeed, sbSpeed;
+
+            if (speedupRatio >= 1) {
+                // SB is faster (or equal)
+                sbSpeed = 1;
+                dijSpeed = 1 / speedupRatio;
+            } else {
+                // Dijkstra is faster (rare, but possible)
+                dijSpeed = 1;
+                sbSpeed = speedupRatio;
+            }
+
+            // Accumulate fractional steps
+            dijkstraWorkDone += dijSpeed;
+            sbWorkDone += sbSpeed;
+
+            // Apply steps to Dijkstra
+            const dijStepsToTake = Math.floor(dijkstraWorkDone);
+            dijkstraWorkDone -= dijStepsToTake;
+
+            for (let i = 0; i < dijStepsToTake && dijkstraStep < maxDijkstra; i++) {
+                dijkstraStep++;
+            }
+
+            // Apply steps to SB
+            const sbStepsToTake = Math.floor(sbWorkDone);
+            sbWorkDone -= sbStepsToTake;
+
+            for (let i = 0; i < sbStepsToTake && sbStep < maxSb; i++) {
+                sbStep++;
+            }
+
+            render();
+        }
+
+
+        function togglePlay() {
+            if (isPlaying) {
+                stopPlayback();
+            } else {
+                startPlayback();
+            }
+        }
+
+        function startPlayback() {
+            isPlaying = true;
+            document.getElementById('btn-play').textContent = '⏸ Pause';
+            document.getElementById('btn-play').classList.add('active');
+
+            const val = parseInt(document.getElementById('speed').value);
+            // Logarithmic scale: 150^(val/100)
+            const speed = Math.round(Math.pow(150, val / 100));
+            // In race mode, use same interval but algorithms advance at different rates
+            const interval = 1000 / Math.max(1, speed);
+
+            playInterval = setInterval(() => {
+                const maxDijkstra = data.dijkstra.steps.length - 1;
+                const maxSb = data.sorting_barrier.steps.length - 1;
+
+                if (dijkstraStep >= maxDijkstra && sbStep >= maxSb) {
+                    stopPlayback();
+                    return;
+                }
+
+                if (raceMode) {
+                    raceStep();
+                } else {
+                    stepForward();
+                }
+            }, interval);
+        }
+
+        function stopPlayback() {
+            isPlaying = false;
+            document.getElementById('btn-play').textContent = '▶ Play';
+            document.getElementById('btn-play').classList.remove('active');
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+        }
+
+        function render() {
+            if (!data) return;
+
+            // Toggle compact mode for large mazes
+            const isLargeMaze = isMazeMode && mazeGrid && (mazeGrid.rows * mazeGrid.cols) > 100;
+            document.querySelectorAll('.status-bar').forEach(el => {
+                el.classList.toggle('compact', isLargeMaze);
+            });
+
+            renderAlgorithm('dijkstra-canvas', data.dijkstra, dijkstraStep, 'dijkstra');
+            renderAlgorithm('sb-canvas', data.sorting_barrier, sbStep, 'sb');
+
+            // Update cost comparison
+            updateCostComparison();
+        }
+
+        function updateCostComparison() {
+            const dijStep = data.dijkstra.steps[dijkstraStep] || data.dijkstra.steps[0];
+            const sbStepData = data.sorting_barrier.steps[sbStep] || data.sorting_barrier.steps[0];
+
+            // Get sorting costs (total_work represents theoretical work done)
+            const dijCost = dijStep.total_work || 0;
+            const sbCost = sbStepData.total_work || 0;
+
+            // Update cost displays in headers
+            document.getElementById('dijkstra-cost').textContent = dijCost.toFixed(1);
+            document.getElementById('sb-cost').textContent = sbCost.toFixed(1);
+
+            // Update comparison bars
+            const maxCost = Math.max(dijCost, sbCost, 1);
+            const dijPercent = (dijCost / maxCost) * 100;
+            const sbPercent = (sbCost / maxCost) * 100;
+
+            document.getElementById('dijkstra-bar').style.width = `${Math.max(dijPercent, 5)}%`;
+            document.getElementById('sb-bar').style.width = `${Math.max(sbPercent, 5)}%`;
+            document.getElementById('dijkstra-bar-value').textContent = dijCost.toFixed(1);
+            document.getElementById('sb-bar-value').textContent = sbCost.toFixed(1);
+
+            // Update speedup badge
+            const speedupBadge = document.getElementById('speedup-badge');
+            const speedupValue = document.getElementById('speedup-value');
+
+            if (dijCost > 0 && sbCost > 0) {
+                const speedup = dijCost / sbCost;
+                if (speedup > 1.1) {
+                    speedupBadge.classList.remove('neutral');
+                    speedupValue.textContent = `${speedup.toFixed(1)}× faster`;
+                } else if (speedup < 0.9) {
+                    speedupBadge.classList.add('neutral');
+                    speedupValue.textContent = `${(1 / speedup).toFixed(1)}× slower`;
+                } else {
+                    speedupBadge.classList.add('neutral');
+                    speedupValue.textContent = '~same';
+                }
+            } else {
+                speedupBadge.classList.add('neutral');
+                speedupValue.textContent = '—';
+            }
+        }
+
+        function renderAlgorithm(canvasId, algoData, stepIndex, prefix) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas size (reset context by setting dimensions)
+            const container = canvas.parentElement;
+            const dpr = window.devicePixelRatio || 1;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // Only resize if needed
+            if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
+                canvas.width = width * dpr;
+                canvas.height = height * dpr;
+            }
+
+            // Reset transform and scale for HiDPI
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            // Clear
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(0, 0, width, height);
+
+            const step = algoData.steps[stepIndex] || algoData.steps[0];
+
+            // Update step counter
+            document.getElementById(`${prefix}-step`).textContent =
+                `Step: ${stepIndex + 1}/${algoData.steps.length}`;
+
+            // Update message
+            document.getElementById(`${prefix}-message`).textContent = step.message;
+
+            // Update distances
+            const distStr = Object.entries(step.distances)
+                .map(([k, v]) => `${k}:${v !== null ? v.toFixed(1) : '∞'}`)
+                .join(' | ');
+            document.getElementById(`${prefix}-distances`).textContent = distStr;
+
+            // Check if algorithm is complete
+            const isComplete = step.action === 'complete';
+
+            // Draw maze grid background if in maze mode
+            if (isMazeMode && mazeGrid) {
+                drawMazeBackground(ctx, width, height);
+            }
+
+            // Draw edges
+            data.graph.edges.forEach(edge => {
+                const from = nodePositions[edge.source];
+                const to = nodePositions[edge.target];
+
+                const isActive = step.edge &&
+                    step.edge[0] === edge.source &&
+                    step.edge[1] === edge.target;
+
+                // Check if edge is on shortest path
+                const isOnPath = isComplete && isMazeMode && isEdgeOnPath(edge.source, edge.target);
+
+                drawEdge(ctx,
+                    from.x * width, from.y * height,
+                    to.x * width, to.y * height,
+                    edge.weight,
+                    isActive,
+                    isOnPath
+                );
+            });
+
+            // Draw nodes
+            data.graph.nodes.forEach(node => {
+                const pos = nodePositions[node];
+                const x = pos.x * width;
+                const y = pos.y * height;
+
+                let color = COLORS.unvisited;
+                let glow = false;
+
+                // Check if node is on shortest path
+                const isOnPath = isComplete && isMazeMode && shortestPath.includes(node);
+
+                if (isOnPath) {
+                    color = '#22c55e';  // Green for path
+                    glow = true;
+                } else if (step.current_node === node) {
+                    color = COLORS.current;
+                    glow = true;
+                } else if (step.visited.includes(node)) {
+                    color = COLORS.visited;
+                } else if (step.frontier.includes(node)) {
+                    color = COLORS.frontier;
+                }
+
+                const dist = step.distances[node];
+                const isSource = node === data.graph.source;
+                const isTarget = isMazeMode && node === mazeGrid?.target;
+
+                drawNode(ctx, x, y, node, dist, color, glow, isSource, isTarget);
+            });
+
+            // Draw "SOLVED!" message if complete in maze mode
+            if (isComplete && isMazeMode) {
+                ctx.font = 'bold 16px JetBrains Mono, monospace';
+                ctx.fillStyle = '#22c55e';
+                ctx.textAlign = 'center';
+                ctx.fillText('✓ SOLVED!', width / 2, 25);
+            }
+        }
+
+        function isEdgeOnPath(source, target) {
+            for (let i = 0; i < shortestPath.length - 1; i++) {
+                if ((shortestPath[i] === source && shortestPath[i + 1] === target) ||
+                    (shortestPath[i] === target && shortestPath[i + 1] === source)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function drawMazeBackground(ctx, width, height) {
+            if (!mazeGrid) return;
+
+            const rows = mazeGrid.rows;
+            const cols = mazeGrid.cols;
+            const cellW = width * 0.8 / cols;
+            const cellH = height * 0.8 / rows;
+            const offsetX = width * 0.1;
+            const offsetY = height * 0.1;
+
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+
+            // Draw grid
+            for (let r = 0; r <= rows; r++) {
+                ctx.beginPath();
+                ctx.moveTo(offsetX, offsetY + r * cellH);
+                ctx.lineTo(offsetX + cols * cellW, offsetY + r * cellH);
+                ctx.stroke();
+            }
+            for (let c = 0; c <= cols; c++) {
+                ctx.beginPath();
+                ctx.moveTo(offsetX + c * cellW, offsetY);
+                ctx.lineTo(offsetX + c * cellW, offsetY + rows * cellH);
+                ctx.stroke();
+            }
+        }
+
+        function drawEdge(ctx, x1, y1, x2, y2, weight, isActive, isOnPath = false) {
+            ctx.beginPath();
+            ctx.strokeStyle = isOnPath ? '#22c55e' : (isActive ? COLORS.edgeActive : COLORS.edge);
+
+            // Scale line width for large mazes
+            let lineScale = 1;
+            if (isMazeMode && mazeGrid) {
+                const cellCount = mazeGrid.rows * mazeGrid.cols;
+                if (cellCount > 500) lineScale = 0.4;
+                else if (cellCount > 200) lineScale = 0.5;
+                else if (cellCount > 100) lineScale = 0.7;
+            }
+            ctx.lineWidth = (isOnPath ? 4 : (isActive ? 3 : 1.5)) * lineScale;
+
+            // Draw curved edge
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const curvature = 0.1;
+            const ctrlX = midX - dy * curvature;
+            const ctrlY = midY + dx * curvature;
+
+            ctx.moveTo(x1, y1);
+            ctx.quadraticCurveTo(ctrlX, ctrlY, x2, y2);
+            ctx.stroke();
+
+            // Draw arrow
+            const angle = Math.atan2(y2 - ctrlY, x2 - ctrlX);
+            const arrowLen = 10;
+            const arrowX = x2 - Math.cos(angle) * 20;
+            const arrowY = y2 - Math.sin(angle) * 20;
+
+            ctx.beginPath();
+            ctx.moveTo(arrowX, arrowY);
+            ctx.lineTo(
+                arrowX - arrowLen * Math.cos(angle - Math.PI / 6),
+                arrowY - arrowLen * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                arrowX - arrowLen * Math.cos(angle + Math.PI / 6),
+                arrowY - arrowLen * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fillStyle = isActive ? COLORS.edgeActive : COLORS.edge;
+            ctx.fill();
+
+            // Draw weight
+            if (isActive) {
+                ctx.font = '11px JetBrains Mono, monospace';
+                ctx.fillStyle = COLORS.edgeActive;
+                ctx.textAlign = 'center';
+                ctx.fillText(weight.toFixed(1), ctrlX, ctrlY - 5);
+            }
+        }
+
+        function drawNode(ctx, x, y, label, distance, color, glow, isSource, isTarget = false) {
+            // Scale node size based on maze size
+            let baseRadius = 18;
+            if (isMazeMode && mazeGrid) {
+                const cellCount = mazeGrid.rows * mazeGrid.cols;
+                if (cellCount > 500) baseRadius = 6;
+                else if (cellCount > 200) baseRadius = 8;
+                else if (cellCount > 100) baseRadius = 10;
+                else if (cellCount > 50) baseRadius = 14;
+            }
+            const radius = (isSource || isTarget) ? baseRadius + 4 : baseRadius;
+
+            // Glow effect
+            if (glow) {
+                ctx.beginPath();
+                ctx.arc(x, y, radius + 8, 0, Math.PI * 2);
+                const gradient = ctx.createRadialGradient(x, y, radius, x, y, radius + 12);
+                gradient.addColorStop(0, color + '80');
+                gradient.addColorStop(1, color + '00');
+                ctx.fillStyle = gradient;
+                ctx.fill();
+            }
+
+            // Node circle
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            // Border for source/target
+            if (isSource) {
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            } else if (isTarget) {
+                ctx.strokeStyle = '#ef4444';  // Red border for target
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+
+            // Node label (show S for source, T for target in maze mode)
+            // Hide labels for large mazes
+            const showLabels = !isMazeMode || !mazeGrid || (mazeGrid.rows * mazeGrid.cols) < 200;
+
+            if (showLabels || isSource || isTarget) {
+                const fontSize = baseRadius < 10 ? 8 : 12;
+                ctx.font = `bold ${fontSize}px JetBrains Mono, monospace`;
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                if (isMazeMode && isSource) {
+                    ctx.fillText('S', x, y);
+                } else if (isMazeMode && isTarget) {
+                    ctx.fillText('T', x, y);
+                } else if (showLabels) {
+                    ctx.fillText(label.toString(), x, y);
+                }
+            }
+
+            // Distance label (hide in maze mode to reduce clutter)
+            if (!isMazeMode && distance !== null && distance !== undefined) {
+                ctx.font = '10px JetBrains Mono, monospace';
+                ctx.fillStyle = COLORS.textMuted;
+                ctx.fillText(distance.toFixed(1), x, y + radius + 12);
+            }
+        }
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            render();
+        });
+    </script>
+</body>
+
+</html>
