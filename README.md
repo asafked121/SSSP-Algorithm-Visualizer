@@ -2,7 +2,7 @@
 
 This project is a comprehensive visualization and benchmarking tool for Single-Source Shortest Path (SSSP) algorithms, specifically comparing the classic **Dijkstra's Algorithm** against the modern **Sorting Barrier SSSP** algorithm.
 
-The implementations are based on the paper *"Breaking the Sorting Barrier for Directed Single-Source Shortest Paths"* by Ran Duan et al. (arXiv:2504.17033v2).
+The implementations are based on the paper *"Breaking the Sorting Barrier for Directed Single-Source Shortest Paths"* by Ran Duan et al. [arXiv:2504.17033](https://arxiv.org/pdf/2504.17033).
 
 ## Visualizer Features
 
