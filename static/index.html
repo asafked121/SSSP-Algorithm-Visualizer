@@ -457,6 +457,8 @@
             }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <script src="bridge.js"></script>
 </head>
 
 <body>
@@ -655,8 +657,10 @@
 
         async function fetchData() {
             try {
-                const response = await fetch('/api/visualization');
-                data = await response.json();
+                // Use Pyodide bridge instead of fetch
+                // const response = await fetch('/api/visualization');
+                // data = await response.json();
+                data = await pyGetVisualization();
                 calculateNodePositions();
                 reset();
             } catch (error) {
@@ -671,8 +675,9 @@
                 isMazeMode = false;
                 mazeGrid = null;
                 shortestPath = [];
-                const response = await fetch('/api/new-graph', { method: 'POST' });
-                data = await response.json();
+                // const response = await fetch('/api/new-graph', { method: 'POST' });
+                // data = await response.json();
+                data = await pyNewGraph();
                 calculateNodePositions();
                 reset();
             } catch (error) {
@@ -683,12 +688,13 @@
         async function generateMaze() {
             try {
                 const size = document.getElementById('maze-size').value;
-                const response = await fetch('/api/maze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ size: size })
-                });
-                const result = await response.json();
+                // const response = await fetch('/api/maze', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({ size: size })
+                // });
+                // const result = await response.json();
+                const result = await pyGenerateMaze(size);
                 data = result;
                 mazeGrid = result.maze;
                 isMazeMode = true;
