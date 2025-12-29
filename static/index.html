@@ -577,38 +577,82 @@
             border-bottom-color: var(--accent-blue);
         }
 
+
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
             body {
-                height: 100dvh;
-                /* dynamic viewport height for mobile browsers */
+                height: auto;
+                min-height: 100vh;
+                overflow-y: auto;
+                overflow-x: hidden;
             }
 
             header {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 1rem;
-                padding: 1rem;
+                gap: 0.75rem;
+                padding: 0.75rem;
+            }
+
+            h1 {
+                font-size: 1.25rem;
+                text-align: center;
+            }
+
+            .subtitle {
+                text-align: center;
+                margin-bottom: 0.5rem;
             }
 
             .controls {
                 overflow-x: auto;
                 padding-bottom: 0.5rem;
                 justify-content: flex-start;
-                /* Hide scrollbar for cleaner look but keep functionality */
+                gap: 0.75rem;
+                /* Hide scrollbar */
                 -ms-overflow-style: none;
-                /* IE and Edge */
                 scrollbar-width: none;
-                /* Firefox */
             }
 
             .controls::-webkit-scrollbar {
                 display: none;
             }
 
+            /* Make buttons slightly more compact on mobile */
+            button,
+            .race-toggle,
+            select {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.8rem;
+                white-space: nowrap;
+            }
+
             .main-container {
-                grid-template-columns: 1fr;
-                grid-template-rows: 1fr 1fr;
+                display: flex;
+                flex-direction: column;
+                overflow: visible;
+                height: auto;
+            }
+
+            .algo-panel {
+                border-bottom: 1px solid var(--border);
+            }
+
+            .algo-header {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .graph-container {
+                /* FORCE minimum height so canvas isn't squashed */
+                height: 350px !important;
+                min-height: 350px;
+            }
+
+            .status-bar {
+                /* Ensure it doesn't take too much space but wraps text if needed */
+                height: auto;
+                max-height: none;
             }
 
             .cost-comparison {
@@ -626,16 +670,20 @@
             .speedup-badge {
                 align-self: center;
                 width: 100%;
+                margin-top: 0.5rem;
             }
 
             .legend {
                 flex-wrap: wrap;
                 justify-content: center;
+                padding-bottom: 2rem;
+                /* Extra space at bottom */
             }
 
             .modal-content {
                 width: 95%;
                 max-height: 85vh;
+                margin: 1rem;
             }
         }
     </style>
