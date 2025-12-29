@@ -576,6 +576,68 @@
         .info-link:hover {
             border-bottom-color: var(--accent-blue);
         }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                height: 100dvh;
+                /* dynamic viewport height for mobile browsers */
+            }
+
+            header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .controls {
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+                justify-content: flex-start;
+                /* Hide scrollbar for cleaner look but keep functionality */
+                -ms-overflow-style: none;
+                /* IE and Edge */
+                scrollbar-width: none;
+                /* Firefox */
+            }
+
+            .controls::-webkit-scrollbar {
+                display: none;
+            }
+
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+
+            .cost-comparison {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .comparison-label {
+                text-align: center;
+                margin-bottom: 0.5rem;
+            }
+
+            .speedup-badge {
+                align-self: center;
+                width: 100%;
+            }
+
+            .legend {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-height: 85vh;
+            }
+        }
     </style>
     <script>
         window.MathJax = {
